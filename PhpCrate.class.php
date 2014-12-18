@@ -48,33 +48,6 @@ class PhpCrate
     }
     
     /**
-     * Connect to Crate.io server
-     *
-     * @return bool
-     */
-    public function connect()
-    {
-        if (!$this->servers) {
-            throw new Exception("No servers to connect left");
-        }
-        
-        $servers = array_keys($this->servers);
-        
-        $this->server = $servers[rand(0, count($servers) - 1)];
-        
-        if (!$this->_socket = @fsockopen($this->server, $this->port, $err_no, $err_str, 2)) {
-            $this->_socket = null;
-            unset($this->servers[$this->server]);
-            return false;
-        }
-        
-        stream_set_timeout($this->_socket, 3);
-        stream_set_blocking($this->_socket, 0);
-        
-        return true;
-    }
-    
-    /**
      * Executes INSERT, UPDATE, DELETE statement
      * 
      * @param string $sql   SQL query to execute
@@ -130,6 +103,28 @@ class PhpCrate
         }
         
         return $output;
+    }
+    
+    private function connect()
+    {
+        if (!$this->servers) {
+            throw new Exception("No servers to connect left");
+        }
+        
+        $servers = array_keys($this->servers);
+        
+        $this->server = $servers[rand(0, count($servers) - 1)];
+        
+        if (!$this->_socket = @fsockopen($this->server, $this->port, $err_no, $err_str, 2)) {
+            $this->_socket = null;
+            unset($this->servers[$this->server]);
+            return false;
+        }
+        
+        stream_set_timeout($this->_socket, 3);
+        stream_set_blocking($this->_socket, 0);
+        
+        return true;
     }
     
     private function send($sql, $args)
@@ -219,10 +214,6 @@ class PhpCrate
         return $json;
     }
 
-    /**
-     * Close the connection
-     *
-     */
     public function __destruct()
     {
         if ($this->_socket) {
