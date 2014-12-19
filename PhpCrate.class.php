@@ -163,16 +163,16 @@ class PhpCrate
         
         while (1) {
             
-            $line = trim(fgets($this->_socket, 1024));
+            $line = trim(fgets($this->_socket));
             
             $m = array();
             
-            if (preg_match('/^Content-Length: ([0-9]+)$/', $line, $m)) {
+            if (!$response_length && preg_match('/^Content-Length: ([0-9]+)$/', $line, $m)) {
                 $response_length = $m[1];
             }
             
             // if we have Content-Length and there is an ampty line, what is below must be response body
-            if ($response_length && !$line) {
+            if ($response_length && !$body && !$line) {
                 $body = true;
             }
             
@@ -183,7 +183,7 @@ class PhpCrate
                 }
                 
                 $response.= $line;
-                
+                                
                 if (strlen($response) == $response_length) {
                     break;
                 }
@@ -194,6 +194,8 @@ class PhpCrate
             $i++;
             
             if ($i > ($this->read_timeout * 20)) {
+                unset($this->servers[$this->server]);
+                $this->_socket = null;
                 return false;
             }
         }
